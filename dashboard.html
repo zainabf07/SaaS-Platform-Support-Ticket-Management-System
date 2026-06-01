@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="page-title">Dashboard</div>
+    <div class="page-subtitle">Welcome back, {{ session.name }}</div>
+  </div>
+  <a href="/tickets/new" class="btn btn-primary">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+    New Ticket
+  </a>
+</div>
+<div class="content">
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-label">Total Tickets</div>
+      <div class="stat-value">{{ total }}</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">New</div>
+      <div class="stat-value">{{ new_tickets }}</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-value">{{ in_progress }}</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Resolved</div>
+      <div class="stat-value">{{ resolved }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">Recent Tickets</div>
+      <a href="/tickets" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Subject</th>
+            <th>Customer</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in recent %}
+          <tr>
+            <td><span class="ticket-id">#{{ t.ticket_id }}</span></td>
+            <td><a href="/tickets/{{ t.ticket_id }}" class="ticket-link">{{ t.subject }}</a></td>
+            <td>{{ t.customer }}</td>
+            <td>{{ t.category_name }}</td>
+            <td>
+              {% set p = t.priority|lower %}
+              <span class="badge badge-{{ p }}">{{ t.priority }}</span>
+            </td>
+            <td>
+              {% set s = t.status_name|lower|replace(' ','') %}
+              {% if s == 'new' %}<span class="badge badge-new">New</span>
+              {% elif s == 'assigned' %}<span class="badge badge-assigned">Assigned</span>
+              {% elif s == 'inprogress' %}<span class="badge badge-progress">In Progress</span>
+              {% elif s == 'resolved' %}<span class="badge badge-resolved">Resolved</span>
+              {% else %}<span class="badge badge-closed">{{ t.status_name }}</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--muted);font-size:0.8rem;">{{ t.created_at.strftime('%b %d, %Y') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

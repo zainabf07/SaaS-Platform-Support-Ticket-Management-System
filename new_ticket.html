@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}New Ticket{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="page-title">Create New Ticket</div>
+    <div class="page-subtitle">Submit a support request</div>
+  </div>
+  <a href="/tickets" class="btn btn-ghost">← Cancel</a>
+</div>
+<div class="content">
+  <div style="max-width:640px;">
+    <div class="card">
+      <form method="POST">
+        <div class="form-group">
+          <label>Subject</label>
+          <input type="text" name="subject" placeholder="Brief description of the issue" required/>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" placeholder="Describe the issue in detail..." required style="min-height:140px;"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>Category</label>
+            <select name="category_id" required>
+              <option value="">Select category</option>
+              {% for c in categories %}
+              <option value="{{ c.category_id }}">{{ c.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priority</label>
+            <select name="priority_id" required>
+              <option value="">Select priority</option>
+              {% for p in priorities %}
+              <option value="{{ p.priority_id }}">{{ p.level }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button type="submit" class="btn btn-primary">Submit Ticket →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

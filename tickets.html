@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Tickets{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="page-title">All Tickets</div>
+    <div class="page-subtitle">{{ tickets|length }} tickets total</div>
+  </div>
+  <a href="/tickets/new" class="btn btn-primary">
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+    New Ticket
+  </a>
+</div>
+<div class="content">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+  {% endwith %}
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#ID</th>
+            <th>Subject</th>
+            <th>Customer</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tickets %}
+          <tr>
+            <td><span class="ticket-id">#{{ t.ticket_id }}</span></td>
+            <td><a href="/tickets/{{ t.ticket_id }}" class="ticket-link">{{ t.subject }}</a></td>
+            <td>{{ t.customer }}</td>
+            <td style="color:var(--muted);font-size:0.82rem;">{{ t.category_name }}</td>
+            <td>
+              {% set p = t.priority|lower %}
+              <span class="badge badge-{{ p }}">{{ t.priority }}</span>
+            </td>
+            <td>
+              {% set s = t.status_name|lower|replace(' ','') %}
+              {% if s == 'new' %}<span class="badge badge-new">New</span>
+              {% elif s == 'assigned' %}<span class="badge badge-assigned">Assigned</span>
+              {% elif s == 'inprogress' %}<span class="badge badge-progress">In Progress</span>
+              {% elif s == 'resolved' %}<span class="badge badge-resolved">Resolved</span>
+              {% else %}<span class="badge badge-closed">{{ t.status_name }}</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--muted);font-size:0.8rem;">{{ t.created_at.strftime('%b %d, %Y') }}</td>
+            <td><a href="/tickets/{{ t.ticket_id }}" class="btn btn-ghost btn-sm">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

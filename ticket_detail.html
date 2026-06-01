@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Ticket #{{ ticket.ticket_id }}{% endblock %}
+
+{% block extra_style %}
+<style>
+.detail-grid { display:grid; grid-template-columns:1fr 300px; gap:20px; }
+.responses-list { display:flex; flex-direction:column; gap:12px; margin-bottom:20px; }
+.response-item {
+  padding:14px 16px; border-radius:10px; border:1px solid var(--border);
+  background:var(--surface2);
+}
+.response-item.internal { border-color:rgba(124,58,237,0.4); background:rgba(124,58,237,0.05); }
+.response-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.response-author { font-weight:600; font-size:0.85rem; }
+.response-time { font-size:0.75rem; color:var(--muted); }
+.response-msg { font-size:0.9rem; line-height:1.6; color:#c9ccd4; }
+.internal-tag { font-size:0.65rem; padding:2px 7px; border-radius:10px;
+  background:rgba(124,58,237,0.2); color:#a78bfa; font-weight:600; text-transform:uppercase; }
+.history-item { display:flex; align-items:center; gap:10px; padding:8px 0;
+  border-bottom:1px solid rgba(37,42,56,0.5); font-size:0.82rem; }
+.history-item:last-child { border-bottom:none; }
+.history-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+.meta-row { display:flex; justify-content:space-between; padding:8px 0;
+  border-bottom:1px solid rgba(37,42,56,0.5); font-size:0.85rem; }
+.meta-row:last-child { border-bottom:none; }
+.meta-key { color:var(--muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="page-title">Ticket #{{ ticket.ticket_id }}</div>
+    <div class="page-subtitle">{{ ticket.subject }}</div>
+  </div>
+  <a href="/tickets" class="btn btn-ghost">← Back</a>
+</div>
+<div class="content">
+  <div class="detail-grid">
+    <!-- LEFT -->
+    <div>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:12px;">Description</div>
+        <p style="color:#c9ccd4;line-height:1.7;font-size:0.9rem;">{{ ticket.description }}</p>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:16px;">
+          Responses ({{ responses|length }})
+        </div>
+        <div class="responses-list">
+          {% for r in responses %}
+          <div class="response-item {% if r.is_internal %}internal{% endif %}">
+            <div class="response-header">
+              <span class="response-author">{{ r.name }}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                {% if r.is_internal %}<span class="internal-tag">Internal</span>{% endif %}
+                <span class="response-time">{{ r.created_at.strftime('%b %d, %Y %H:%M') }}</span>
+              </div>
+            </div>
+            <div class="response-msg">{{ r.message }}</div>
+          </div>
+          {% endfor %}
+          {% if not responses %}
+          <p style="color:var(--muted);font-size:0.85rem;">No responses yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- Reply form -->
+        <div style="border-top:1px solid var(--border);padding-top:16px;">
+          <div style="font-weight:600;margin-bottom:12px;font-size:0.9rem;">Add Response</div>
+          <form method="POST" action="/tickets/{{ ticket.ticket_id }}/respond">
+            <div class="form-group">
+              <textarea name="message" placeholder="Type your response..." required></textarea>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              {% if session.role in ['Admin','Agent'] %}
+              <label style="display:flex;align-items:center;gap:8px;text-transform:none;
+                letter-spacing:0;font-size:0.85rem;color:var(--muted);cursor:pointer;">
+                <input type="checkbox" name="is_internal" style="width:auto;"/>
+                Internal note (not visible to customer)
+              </label>
+              {% else %}
+              <span></span>
+              {% endif %}
+              <button type="submit" class="btn btn-primary btn-sm">Send Reply</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <!-- Ticket Info -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px;">Details</div>
+        <div class="meta-row">
+          <span class="meta-key">Status</span>
+          <span>
+            {% set s = ticket.status_name|lower|replace(' ','') %}
+            {% if s == 'new' %}<span class="badge badge-new">New</span>
+            {% elif s == 'assigned' %}<span class="badge badge-assigned">Assigned</span>
+            {% elif s == 'inprogress' %}<span class="badge badge-progress">In Progress</span>
+            {% elif s == 'resolved' %}<span class="badge badge-resolved">Resolved</span>
+            {% else %}<span class="badge badge-closed">{{ ticket.status_name }}</span>
+            {% endif %}
+          </span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Priority</span>
+          <span class="badge badge-{{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Category</span>
+          <span style="font-size:0.85rem;">{{ ticket.category_name }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Customer</span>
+          <span style="font-size:0.85rem;">{{ ticket.customer }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Created</span>
+          <span style="font-size:0.82rem;color:var(--muted);">{{ ticket.created_at.strftime('%b %d, %Y') }}</span>
+        </div>
+      </div>
+
+      <!-- SLA -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px;">SLA</div>
+        <div class="meta-row">
+          <span class="meta-key">Response Limit</span>
+          <span style="font-size:0.85rem;">{{ ticket.response_time_limit }}h</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-key">Resolution Limit</span>
+          <span style="font-size:0.85rem;">{{ ticket.resolution_time_limit }}h</span>
+        </div>
+      </div>
+
+      <!-- Update Status (Admin/Agent only) -->
+      {% if session.role in ['Admin','Agent'] %}
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px;">Update Status</div>
+        <form method="POST" action="/tickets/{{ ticket.ticket_id }}/status">
+          <div class="form-group">
+            <select name="status_id">
+              {% for st in statuses %}
+              <option value="{{ st.status_id }}" {% if st.status_id == ticket.status_id %}selected{% endif %}>
+                {{ st.status_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" style="width:100%;">Update</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Assignments -->
+      {% if assignments %}
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px;">Assigned Agents</div>
+        {% for a in assignments %}
+        <div class="meta-row">
+          <span style="font-size:0.85rem;">{{ a.agent }}</span>
+          {% if a.is_active %}<span class="badge badge-resolved" style="font-size:0.65rem;">Active</span>
+          {% else %}<span class="badge badge-closed" style="font-size:0.65rem;">Inactive</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- History -->
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:14px;">History</div>
+        {% for h in history %}
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div>
+            <span style="font-weight:500;">{{ h.status_name }}</span>
+            <span style="color:var(--muted);"> by {{ h.changed_by }}</span>
+            <div style="font-size:0.75rem;color:var(--muted);">{{ h.changed_at.strftime('%b %d, %H:%M') }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

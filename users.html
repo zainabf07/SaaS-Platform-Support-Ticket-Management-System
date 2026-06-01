@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="page-title">Users</div>
+    <div class="page-subtitle">{{ users|length }} registered users</div>
+  </div>
+</div>
+<div class="content">
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td><span class="ticket-id">{{ u.user_id }}</span></td>
+            <td style="font-weight:500;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:30px;height:30px;border-radius:7px;
+                  background:linear-gradient(135deg,#4f6ef7,#7c3aed);
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0;">
+                  {{ u.name[0] }}
+                </div>
+                {{ u.name }}
+              </div>
+            </td>
+            <td style="color:var(--muted);font-size:0.85rem;">{{ u.email }}</td>
+            <td>
+              {% if u.role_name == 'Admin' %}
+                <span class="badge badge-high">Admin</span>
+              {% elif u.role_name == 'Agent' %}
+                <span class="badge badge-assigned">Agent</span>
+              {% else %}
+                <span class="badge badge-new">Customer</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.is_active %}
+                <span class="badge badge-resolved">Active</span>
+              {% else %}
+                <span class="badge badge-closed">Inactive</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
